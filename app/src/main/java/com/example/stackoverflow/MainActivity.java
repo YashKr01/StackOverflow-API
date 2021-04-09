@@ -31,8 +31,9 @@ public class MainActivity extends AppCompatActivity {
     private MyAdapter adapter;
     private List<Items> ownerList;
     private ProgressBar progressBar;
-    int page = 1;
-    int pageSize = 10;
+    int PAGE = 2;
+    int PAGE_SIZE = 10;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,23 +47,25 @@ public class MainActivity extends AppCompatActivity {
         setupRecyclerView();
 
         // setting up api call
-        ApiService apiService = RetrofitInstance.getRetrofit().create(ApiService.class);
+
+        apiService = RetrofitInstance.getRetrofit().create(ApiService.class);
 
         // initial call
-        loadList(apiService, page, pageSize);
+        loadList();
 
         // add scroll listener
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                if(!recyclerView.canScrollVertically(1)){
+                if (!recyclerView.canScrollVertically(1)) {
                     Log.d("TAG", "onScrolled: END");
+                    PAGE++;
 
                     //load new list after scrolling to end
-                    loadList(apiService,page,pageSize);
+                    loadList();
+
                 }
 
             }
@@ -71,18 +74,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // for loading list and pagination
-    private void loadList(ApiService apiService, int page, int pageSize) {
+    private void loadList() {
 
-        page++;
+        Log.d("TAG", "loadList: " + PAGE);
         progressBar.setVisibility(View.VISIBLE);
 
-        apiService.getResponse(page, pageSize, Constants.SITE).enqueue(new Callback<MyResponse>() {
+        apiService.getResponse(PAGE, PAGE_SIZE, Constants.SITE).enqueue(new Callback<MyResponse>() {
             @Override
             public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
                 if (response.isSuccessful()) {
+                    Log.d("TAG", "onResponse: " + response.body()
+                            .getItems().get(2).getOwner().getDisplayName());
                     int old_count = ownerList.size();
                     ownerList.addAll(response.body().getItems());
-                    adapter.notifyItemRangeChanged(old_count, response.body().getItems().size());
+                    adapter.notifyItemRangeInserted(old_count, response.body().getItems().size());
+                    Log.d("TAG", "onResponse: "+ownerList.size());
                     progressBar.setVisibility(View.INVISIBLE);
                 }
             }
