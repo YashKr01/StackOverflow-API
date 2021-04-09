@@ -8,9 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.example.stackoverflow.adapters.MyAdapter;
 import com.example.stackoverflow.api.ApiService;
@@ -26,7 +24,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static com.example.stackoverflow.util.Constants.PAGE_SIZE;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,8 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private MyAdapter adapter;
     private List<Items> ownerList;
     private ProgressBar progressBar;
-    private LinearLayoutManager layoutManager;
-    int page = 2;
+    int page = 1;
     int pageSize = 10;
 
     @Override
@@ -55,13 +51,18 @@ public class MainActivity extends AppCompatActivity {
         // initial call
         loadList(apiService, page, pageSize);
 
+        // add scroll listener
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if(!recyclerView.canScrollVertically(1)){
-                    Log.d("TAG", "onScrolled: Paginate");
 
+                if(!recyclerView.canScrollVertically(1)){
+                    Log.d("TAG", "onScrolled: END");
+
+                    //load new list after scrolling to end
+                    loadList(apiService,page,pageSize);
                 }
 
             }
@@ -72,32 +73,32 @@ public class MainActivity extends AppCompatActivity {
     // for loading list and pagination
     private void loadList(ApiService apiService, int page, int pageSize) {
 
+        page++;
         progressBar.setVisibility(View.VISIBLE);
 
         apiService.getResponse(page, pageSize, Constants.SITE).enqueue(new Callback<MyResponse>() {
             @Override
             public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful()) {
+                    int old_count = ownerList.size();
                     ownerList.addAll(response.body().getItems());
-                    adapter.submitList(ownerList);
+                    adapter.notifyItemRangeChanged(old_count, response.body().getItems().size());
                     progressBar.setVisibility(View.INVISIBLE);
-                    Log.d("TAG", "onResponse: LIST SIZE " + ownerList.size());
                 }
             }
 
             @Override
             public void onFailure(Call<MyResponse> call, Throwable t) {
+                Log.d("TAG", "onFailure: " + t.getMessage());
                 progressBar.setVisibility(View.INVISIBLE);
             }
         });
-
     }
 
     private void setupRecyclerView() {
         ownerList = new ArrayList<>();
-        layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-        adapter = new MyAdapter(Items.itemCallback, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new MyAdapter(this, ownerList);
         recyclerView.setAdapter(adapter);
     }
 

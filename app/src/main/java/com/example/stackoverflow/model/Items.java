@@ -1,8 +1,5 @@
 package com.example.stackoverflow.model;
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.DiffUtil;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -47,17 +44,5 @@ public class Items {
         return owner.equals(items.owner) &&
                 isAccepted.equals(items.isAccepted);
     }
-
-    public static DiffUtil.ItemCallback<Items> itemCallback = new DiffUtil.ItemCallback<Items>() {
-        @Override
-        public boolean areItemsTheSame(@NonNull Items oldItem, @NonNull Items newItem) {
-            return oldItem.getOwner().getUserId().equals(newItem.getOwner().getUserId());
-        }
-
-        @Override
-        public boolean areContentsTheSame(@NonNull Items oldItem, @NonNull Items newItem) {
-            return oldItem.equals(newItem);
-        }
-    };
 
 }
