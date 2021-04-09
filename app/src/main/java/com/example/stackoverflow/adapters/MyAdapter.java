@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -19,39 +20,36 @@ import com.example.stackoverflow.model.Owner;
 
 import java.util.List;
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+public class MyAdapter extends ListAdapter<Items, MyAdapter.MyViewHolder> {
 
     private Context context;
-    private List<Items> responseList;
 
-    public MyAdapter(Context context, List<Items> responseList) {
+    public MyAdapter(@NonNull DiffUtil.ItemCallback<Items> diffCallback, Context context) {
+        super(diffCallback);
         this.context = context;
-        this.responseList = responseList;
     }
 
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new MyViewHolder(LayoutInflater.from(context).inflate(R.layout.single_item, parent, false));
+        return new MyViewHolder(LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.single_item, parent, false
+                ));
     }
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
 
-        Items items = responseList.get(position);
-        holder.userName.setText("Name : " + items.getOwner().getDisplayName());
-        holder.userType.setText("Type : " + items.getOwner().getUserType());
-        holder.userId.setText("Used id : " + String.valueOf(items.getOwner().getUserId()));
+        Items current = getItem(position);
+        holder.userName.setText("Name : " + current.getOwner().getDisplayName());
+        holder.userType.setText("Type : " + current.getOwner().getUserType());
+        holder.userId.setText("User id : " + current.getOwner().getUserId());
 
-        Glide.with(context).load(items.getOwner().getProfileImage())
+        Glide.with(context).load(current.getOwner().getProfileImage())
                 .into(holder.userImage);
 
     }
 
-    @Override
-    public int getItemCount() {
-        return responseList.size();
-    }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
@@ -68,17 +66,5 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
         }
     }
-
-    public static DiffUtil.ItemCallback<Items> itemCallback = new DiffUtil.ItemCallback<Items>() {
-        @Override
-        public boolean areItemsTheSame(@NonNull Items oldItem, @NonNull Items newItem) {
-            return oldItem.getOwner().getUserId().equals(newItem.getOwner().getUserId());
-        }
-
-        @Override
-        public boolean areContentsTheSame(@NonNull Items oldItem, @NonNull Items newItem) {
-            return oldItem.equals(newItem);
-        }
-    };
 
 }
